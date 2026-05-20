@@ -24,16 +24,10 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-gray-200 bg-white">
       <div className="border-b border-gray-100 px-3 py-3">
-        <button
-          type="button"
-          className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-        >
-          <span className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-500" />
-            Superleap
-          </span>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </button>
+        <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-gray-900">
+          <Building2 className="h-4 w-4 text-gray-500" />
+          Superleap
+        </div>
         <div className="relative mt-2">
           <Search className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
           <input
