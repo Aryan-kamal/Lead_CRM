@@ -1,6 +1,6 @@
 # Mini Lead CRM — Superleap Assessment
 
-Level 1 implementation: lead list, CRUD, status transitions, mock API.
+Level 1 + Level 2: lead list, CRUD, kanban board, URL-persisted filters, mock API.
 
 ## Quick start
 
@@ -29,11 +29,14 @@ Open `http://localhost:5173`.
 - `mock-server/` — Express mock API + seed data
 - `frontend/` — React app (see `frontend/README.md` for details)
 
-## Level 1 routes
+## Routes
 
 | Route | Purpose |
 |-------|---------|
-| `/leads` | List, search, status filter |
+| `/leads` | List (pagination, filters, CSV export) |
+| `/board` | Kanban — drag cards to change status |
 | `/leads/new` | Create lead |
 | `/leads/:id` | View lead + status actions |
 | `/leads/:id/edit` | Edit lead (refresh-safe) |
+
+Filters persist in the URL, e.g. `?q=priya&status=NEW,CONTACTED&source=website&sort=updated_at&dir=desc` — shared between list and board.

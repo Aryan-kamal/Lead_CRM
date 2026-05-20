@@ -2,10 +2,19 @@ import { ChevronDown, Download, Plus, RefreshCw, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLeads } from '../../context/LeadsContext';
 import { downloadCsv } from '../../utils/csv';
+import { pathWithFilters } from '../../utils/urlFilters';
+import { ViewToggle } from './ViewToggle';
 
 export function TopHeader() {
-  const { searchQuery, setSearchQuery, refreshLeads, loading, filteredLeads } =
-    useLeads();
+  const {
+    searchQuery,
+    setSearchQuery,
+    refreshLeads,
+    loading,
+    filteredLeads,
+    filterParams,
+  } = useLeads();
+  const addLeadPath = pathWithFilters('/leads/new', filterParams);
 
   function handleSaveCsv() {
     const date = new Date().toISOString().slice(0, 10);
@@ -29,13 +38,14 @@ export function TopHeader() {
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search leads by name or email..."
+          placeholder="Search by name, email, or phone..."
           className="w-full rounded-md border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
           aria-label="Search leads"
         />
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        <ViewToggle />
         <button
           type="button"
           onClick={handleSaveCsv}
@@ -46,7 +56,7 @@ export function TopHeader() {
           Save
         </button>
         <Link
-          to="/leads/new"
+          to={addLeadPath}
           className="inline-flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
         >
           <Plus className="h-4 w-4" />

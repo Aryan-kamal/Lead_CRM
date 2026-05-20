@@ -12,6 +12,11 @@ export function getNextStatuses(status: LeadStatus): LeadStatus[] {
   return NEXT[status];
 }
 
+export function canTransition(from: LeadStatus, to: LeadStatus): boolean {
+  if (from === to) return false;
+  return getNextStatuses(from).includes(to);
+}
+
 export function isTerminal(status: LeadStatus): boolean {
   return status === 'CONVERTED' || status === 'LOST';
 }

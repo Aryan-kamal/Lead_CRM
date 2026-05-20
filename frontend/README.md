@@ -59,11 +59,17 @@ List fetch, form submit, status change, and delete each have explicit loading or
 - **Offline:** cache leads in `indexedDB`, queue mutations, replay when online; show a “pending sync” indicator.
 - **Concurrent edits:** `ETag` or `updated_at` on `PUT` — server returns `409` if stale; UI offers refresh or merge.
 
+### Level 2 — Kanban (`/board`)
+
+- Five columns; CONVERTED and LOST are locked (cards not draggable).
+- **@dnd-kit/core** for drag-and-drop.
+- Invalid drops: card snaps back, amber banner, no API call.
+- Valid drops: optimistic move, revert on API failure.
+- Search, status, source, and sort persist in the URL when switching List ↔ Board.
+
 ### Another week
 
-- Level 2 kanban at `/board`
-- URL query params for search/filter
-- Keyboard shortcut for search (⌘K)
+- Level 3 bulk actions and virtualization
 - Toast component instead of inline banners
 
 ## AI usage note

@@ -6,7 +6,8 @@ import {
   Search,
   Users,
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useSearchParams } from 'react-router-dom';
+import { pathWithFilters } from '../../utils/urlFilters';
 
 const workspaceItems = [
   'Opportunities',
@@ -16,6 +17,10 @@ const workspaceItems = [
 ];
 
 export function Sidebar() {
+  const [searchParams] = useSearchParams();
+  const leadsPath = pathWithFilters('/leads', searchParams);
+  const boardPath = pathWithFilters('/board', searchParams);
+
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-gray-200 bg-white">
       <div className="border-b border-gray-100 px-3 py-3">
@@ -42,7 +47,7 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 text-sm">
         <NavLink
-          to="/leads"
+          to={leadsPath}
           className={({ isActive }) =>
             `mb-0.5 flex items-center gap-2 rounded-md px-2 py-1.5 ${
               isActive ? 'bg-teal-50 text-teal-800' : 'text-gray-600 hover:bg-gray-50'
@@ -67,7 +72,7 @@ export function Sidebar() {
           WORKSPACE
         </p>
         <NavLink
-          to="/leads"
+          to={leadsPath}
           end
           className={({ isActive }) =>
             `mb-0.5 flex items-center gap-2 rounded-md px-2 py-1.5 font-medium ${
@@ -77,6 +82,17 @@ export function Sidebar() {
         >
           <Users className="h-4 w-4" />
           Leads
+        </NavLink>
+        <NavLink
+          to={boardPath}
+          className={({ isActive }) =>
+            `mb-0.5 flex items-center gap-2 rounded-md px-2 py-1.5 font-medium ${
+              isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'
+            }`
+          }
+        >
+          <LayoutGrid className="h-4 w-4" />
+          Board
         </NavLink>
         {workspaceItems.map((item) => (
           <button

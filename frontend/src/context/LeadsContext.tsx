@@ -7,10 +7,17 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import * as api from '../api/leads';
 import type { Lead, LeadInput, LeadStatus } from '../types/lead';
 import { KNOWN_SOURCES } from '../constants/sources';
 import { STATUSES } from '../types/lead';
+import {
+  parseSortDir,
+  parseSortField,
+  parseStatusFilter,
+  parseListParam,
+} from '../utils/urlFilters';
 
 export type SortField = 'updated_at' | 'created_at';
 export type SortDir = 'asc' | 'desc';
@@ -26,6 +33,7 @@ type LeadsContextValue = {
   sortField: SortField;
   sortDir: SortDir;
   actionError: string | null;
+  filterParams: URLSearchParams;
   setSearchQuery: (q: string) => void;
   toggleStatusFilter: (status: LeadStatus) => void;
   clearStatusFilter: () => void;
@@ -42,6 +50,7 @@ type LeadsContextValue = {
   updateLead: (id: string, data: LeadInput) => Promise<Lead>;
   deleteLead: (id: string) => Promise<void>;
   changeStatus: (id: string, status: LeadStatus) => Promise<Lead>;
+  changeStatusOptimistic: (id: string, status: LeadStatus) => Promise<Lead>;
   clearActionError: () => void;
 };
 
@@ -67,15 +76,116 @@ function compareTime(a: string, b: string, dir: SortDir): number {
 }
 
 export function LeadsProvider({ children }: { children: ReactNode }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<LeadStatus[]>([]);
-  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
-  const [sortField, setSortField] = useState<SortField>('updated_at');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const searchQuery = searchParams.get('q') ?? '';
+  const statusFilter = useMemo(
+    () => parseStatusFilter(searchParams.get('status')),
+    [searchParams],
+  );
+  const sourceFilter = useMemo(
+    () => parseListParam(searchParams.get('source')),
+    [searchParams],
+  );
+  const sortField = parseSortField(searchParams.get('sort'));
+  const sortDir = parseSortDir(searchParams.get('dir'));
+
+  const patchParams = useCallback(
+    (patch: {
+      q?: string;
+      status?: LeadStatus[];
+      source?: string[];
+      sort?: SortField;
+      dir?: SortDir;
+    }) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (patch.q !== undefined) {
+            if (patch.q.trim()) next.set('q', patch.q.trim());
+            else next.delete('q');
+          }
+          if (patch.status !== undefined) {
+            if (patch.status.length) next.set('status', patch.status.join(','));
+            else next.delete('status');
+          }
+          if (patch.source !== undefined) {
+            if (patch.source.length) next.set('source', patch.source.join(','));
+            else next.delete('source');
+          }
+          if (patch.sort !== undefined) {
+            next.set('sort', patch.sort);
+          }
+          if (patch.dir !== undefined) {
+            next.set('dir', patch.dir);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setSearchQuery = useCallback(
+    (q: string) => patchParams({ q }),
+    [patchParams],
+  );
+
+  const toggleStatusFilter = useCallback(
+    (status: LeadStatus) => {
+      const next = statusFilter.includes(status)
+        ? statusFilter.filter((s) => s !== status)
+        : [...statusFilter, status];
+      patchParams({ status: next });
+    },
+    [statusFilter, patchParams],
+  );
+
+  const clearStatusFilter = useCallback(
+    () => patchParams({ status: [] }),
+    [patchParams],
+  );
+
+  const toggleSourceFilter = useCallback(
+    (source: string) => {
+      const next = sourceFilter.includes(source)
+        ? sourceFilter.filter((s) => s !== source)
+        : [...sourceFilter, source];
+      patchParams({ source: next });
+    },
+    [sourceFilter, patchParams],
+  );
+
+  const clearSourceFilter = useCallback(
+    () => patchParams({ source: [] }),
+    [patchParams],
+  );
+
+  const setSort = useCallback(
+    (field: SortField, dir: SortDir) => patchParams({ sort: field, dir }),
+    [patchParams],
+  );
+
+  const setSortFieldOnly = useCallback(
+    (field: SortField) => patchParams({ sort: field }),
+    [patchParams],
+  );
+
+  const toggleSortDir = useCallback(() => {
+    patchParams({ dir: sortDir === 'asc' ? 'desc' : 'asc' });
+  }, [sortDir, patchParams]);
+
+  const clearAllFilters = useCallback(() => {
+    patchParams({ q: '', status: [], source: [] });
+  }, [patchParams]);
+
+  const activeFilterCount =
+    statusFilter.length + sourceFilter.length + (searchQuery.trim() ? 1 : 0);
 
   const refreshLeads = useCallback(async () => {
     setLoading(true);
@@ -106,7 +216,8 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
       if (!q) return true;
       return (
         lead.name.toLowerCase().includes(q) ||
-        lead.email.toLowerCase().includes(q)
+        lead.email.toLowerCase().includes(q) ||
+        (lead.phone?.toLowerCase().includes(q) ?? false)
       );
     });
 
@@ -114,44 +225,6 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
       compareTime(a[sortField], b[sortField], sortDir),
     );
   }, [leads, searchQuery, statusFilter, sourceFilter, sortField, sortDir]);
-
-  const toggleStatusFilter = useCallback((status: LeadStatus) => {
-    setStatusFilter((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status],
-    );
-  }, []);
-
-  const clearStatusFilter = useCallback(() => setStatusFilter([]), []);
-
-  const toggleSourceFilter = useCallback((source: string) => {
-    setSourceFilter((prev) =>
-      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source],
-    );
-  }, []);
-
-  const clearSourceFilter = useCallback(() => setSourceFilter([]), []);
-
-  const setSort = useCallback((field: SortField, dir: SortDir) => {
-    setSortField(field);
-    setSortDir(dir);
-  }, []);
-
-  const setSortFieldOnly = useCallback((field: SortField) => {
-    setSortField(field);
-  }, []);
-
-  const toggleSortDir = useCallback(() => {
-    setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-  }, []);
-
-  const clearAllFilters = useCallback(() => {
-    setStatusFilter([]);
-    setSourceFilter([]);
-    setSearchQuery('');
-  }, []);
-
-  const activeFilterCount =
-    statusFilter.length + sourceFilter.length + (searchQuery.trim() ? 1 : 0);
 
   const getLeadById = useCallback(
     (id: string) => leads.find((l) => l.id === id),
@@ -199,6 +272,34 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const changeStatusOptimistic = useCallback(
+    async (id: string, status: LeadStatus) => {
+      const lead = leads.find((l) => l.id === id);
+      if (!lead) throw new Error('Lead not found');
+      const previousStatus = lead.status;
+      setActionError(null);
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === id ? { ...l, status, updated_at: new Date().toISOString() } : l,
+        ),
+      );
+      try {
+        const updated = await api.patchLeadStatus(id, status);
+        setLeads((prev) => prev.map((l) => (l.id === id ? updated : l)));
+        return updated;
+      } catch (e) {
+        setLeads((prev) =>
+          prev.map((l) => (l.id === id ? { ...l, status: previousStatus } : l)),
+        );
+        const msg =
+          e instanceof Error ? e.message : 'Could not update the lead status.';
+        setActionError(msg);
+        throw e;
+      }
+    },
+    [leads],
+  );
+
   const value: LeadsContextValue = {
     leads,
     filteredLeads,
@@ -210,6 +311,7 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
     sortField,
     sortDir,
     actionError,
+    filterParams: searchParams,
     setSearchQuery,
     toggleStatusFilter,
     clearStatusFilter,
@@ -226,6 +328,7 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
     updateLead,
     deleteLead,
     changeStatus,
+    changeStatusOptimistic,
     clearActionError: () => setActionError(null),
   };
 

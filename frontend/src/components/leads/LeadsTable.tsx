@@ -1,9 +1,10 @@
-import { Mail } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PAGE_SIZE } from '../../constants/pagination';
 import { useLeads } from '../../context/LeadsContext';
 import { formatDate } from '../../utils/format';
+import { pathWithFilters } from '../../utils/urlFilters';
 import { Avatar } from '../ui/Avatar';
 import { Pagination } from '../ui/Pagination';
 import { StatusBadge } from '../ui/StatusBadge';
@@ -23,6 +24,7 @@ export function LeadsTable() {
     sourceFilter,
     sortField,
     sortDir,
+    filterParams,
   } = useLeads();
 
   const [page, setPage] = useState(1);
@@ -66,7 +68,7 @@ export function LeadsTable() {
           Try changing your search or status filters, or add a new lead.
         </p>
         <Link
-          to="/leads/new"
+          to={pathWithFilters('/leads/new', filterParams)}
           className="mt-4 inline-block text-sm font-medium text-teal-600 hover:underline"
         >
           Add your first lead
@@ -89,11 +91,12 @@ export function LeadsTable() {
         </div>
       )}
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[760px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Phone</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Source</th>
               <th className="px-4 py-3">Updated</th>
@@ -110,7 +113,7 @@ export function LeadsTable() {
                   <div className="flex items-center gap-2.5">
                     <Avatar name={lead.name} />
                     <Link
-                      to={`/leads/${lead.id}`}
+                      to={pathWithFilters(`/leads/${lead.id}`, filterParams)}
                       className="font-medium text-gray-900 hover:text-teal-700"
                     >
                       {lead.name}
@@ -123,6 +126,16 @@ export function LeadsTable() {
                     {lead.email}
                   </span>
                 </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {lead.phone ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                      {lead.phone}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <StatusBadge status={lead.status} />
                 </td>
@@ -131,13 +144,13 @@ export function LeadsTable() {
                 <td className="relative overflow-visible px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <Link
-                      to={`/leads/${lead.id}`}
+                      to={pathWithFilters(`/leads/${lead.id}`, filterParams)}
                       className="text-xs font-medium text-gray-600 hover:text-gray-900"
                     >
                       View
                     </Link>
                     <Link
-                      to={`/leads/${lead.id}/edit`}
+                      to={pathWithFilters(`/leads/${lead.id}/edit`, filterParams)}
                       className="text-xs font-medium text-gray-600 hover:text-gray-900"
                     >
                       Edit

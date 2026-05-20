@@ -7,13 +7,16 @@ import { Avatar } from '../components/ui/Avatar';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { useLeads } from '../context/LeadsContext';
 import { useLead } from '../hooks/useLead';
+import { pathWithFilters } from '../utils/urlFilters';
 import { formatDate } from '../utils/format';
 import { isTerminal } from '../utils/status';
 
 export function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { changeStatus, deleteLead, actionError, clearActionError } = useLeads();
+  const { changeStatus, deleteLead, actionError, clearActionError, filterParams } =
+    useLeads();
+  const leadsListPath = pathWithFilters('/leads', filterParams);
   const { lead, loading, error } = useLead(id);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -26,7 +29,7 @@ export function LeadDetailPage() {
     return (
       <div className="mx-4 my-8 rounded-lg border border-red-200 bg-red-50 p-6 text-center">
         <p className="text-sm text-red-800">{error ?? 'Lead not found'}</p>
-        <Link to="/leads" className="mt-3 inline-block text-sm text-teal-600 hover:underline">
+        <Link to={leadsListPath} className="mt-3 inline-block text-sm text-teal-600 hover:underline">
           Back to leads
         </Link>
       </div>
@@ -37,7 +40,7 @@ export function LeadDetailPage() {
     setDeleting(true);
     try {
       await deleteLead(lead!.id);
-      navigate('/leads');
+      navigate(leadsListPath);
     } catch {
       // keep dialog open; error banner shows below
     } finally {
@@ -48,7 +51,7 @@ export function LeadDetailPage() {
   return (
     <div className="p-4">
       <Link
-        to="/leads"
+        to={leadsListPath}
         className="mb-4 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -110,7 +113,7 @@ export function LeadDetailPage() {
 
         <div className="mt-6 flex gap-2 border-t border-gray-100 pt-4">
           <Link
-            to={`/leads/${lead.id}/edit`}
+            to={pathWithFilters(`/leads/${lead.id}/edit`, filterParams)}
             className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Pencil className="h-4 w-4" />
