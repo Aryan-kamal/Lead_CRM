@@ -1,15 +1,46 @@
 import { Mail } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PAGE_SIZE } from '../../constants/pagination';
 import { useLeads } from '../../context/LeadsContext';
 import { formatDate } from '../../utils/format';
 import { Avatar } from '../ui/Avatar';
+import { Pagination } from '../ui/Pagination';
 import { StatusBadge } from '../ui/StatusBadge';
 import { DeleteLeadButton } from './DeleteLeadButton';
 import { StatusMenu } from './StatusMenu';
 
 export function LeadsTable() {
-  const { filteredLeads, loading, error, changeStatus, actionError, clearActionError } =
-    useLeads();
+  const {
+    filteredLeads,
+    loading,
+    error,
+    changeStatus,
+    actionError,
+    clearActionError,
+    searchQuery,
+    statusFilter,
+    sourceFilter,
+    sortField,
+    sortDir,
+  } = useLeads();
+
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / PAGE_SIZE));
+
+  const paginatedLeads = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredLeads.slice(start, start + PAGE_SIZE);
+  }, [filteredLeads, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, sourceFilter, sortField, sortDir]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   if (loading) {
     return (
@@ -57,7 +88,7 @@ export function LeadsTable() {
           </button>
         </div>
       )}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -69,9 +100,12 @@ export function LeadsTable() {
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {filteredLeads.map((lead) => (
-              <tr key={lead.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/80">
+          <tbody className="overflow-visible">
+            {paginatedLeads.map((lead) => (
+              <tr
+                key={lead.id}
+                className="border-b border-gray-100 last:border-0 hover:bg-gray-50/80"
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <Avatar name={lead.name} />
@@ -94,7 +128,7 @@ export function LeadsTable() {
                 </td>
                 <td className="px-4 py-3 text-gray-600">{lead.source ?? '—'}</td>
                 <td className="px-4 py-3 text-gray-500">{formatDate(lead.updated_at)}</td>
-                <td className="px-4 py-3">
+                <td className="relative overflow-visible px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <Link
                       to={`/leads/${lead.id}`}
@@ -122,6 +156,13 @@ export function LeadsTable() {
             ))}
           </tbody>
         </table>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={filteredLeads.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

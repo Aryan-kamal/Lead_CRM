@@ -1,9 +1,16 @@
-import { ChevronDown, Plus, RefreshCw, Search, Settings, Sparkles } from 'lucide-react';
+import { ChevronDown, Download, Plus, RefreshCw, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLeads } from '../../context/LeadsContext';
+import { downloadCsv } from '../../utils/csv';
 
 export function TopHeader() {
-  const { searchQuery, setSearchQuery, refreshLeads, loading } = useLeads();
+  const { searchQuery, setSearchQuery, refreshLeads, loading, filteredLeads } =
+    useLeads();
+
+  function handleSaveCsv() {
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCsv(filteredLeads, `superleap-leads-${date}.csv`);
+  }
 
   return (
     <header className="flex shrink-0 items-center gap-4 border-b border-gray-200 bg-white px-4 py-3">
@@ -23,20 +30,20 @@ export function TopHeader() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search leads by name or email..."
-          className="w-full rounded-md border border-gray-200 py-2 pl-9 pr-16 text-sm focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
+          className="w-full rounded-md border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
           aria-label="Search leads"
         />
-        <span className="pointer-events-none absolute right-3 top-2 rounded border border-gray-200 bg-gray-50 px-1.5 text-[10px] text-gray-400">
-          ⌘K
-        </span>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
-          className="hidden rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 sm:inline-block"
+          onClick={handleSaveCsv}
+          disabled={loading || filteredLeads.length === 0}
+          className="hidden items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex"
         >
-          Save view
+          <Download className="h-4 w-4" />
+          Save
         </button>
         <Link
           to="/leads/new"
@@ -53,20 +60,6 @@ export function TopHeader() {
           aria-label="Refresh leads"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-gray-300 p-2 text-gray-600 hover:bg-gray-50"
-          aria-label="Settings"
-        >
-          <Settings className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1 rounded-md bg-teal-400 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-500"
-        >
-          <Sparkles className="h-4 w-4" />
-          Super
         </button>
       </div>
     </header>

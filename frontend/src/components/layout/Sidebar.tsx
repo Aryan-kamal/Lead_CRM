@@ -1,11 +1,9 @@
 import {
-  Bell,
   Building2,
   ChevronDown,
   Home,
   LayoutGrid,
   Search,
-  Sparkles,
   Users,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -27,15 +25,10 @@ export function Sidebar() {
         >
           <span className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-500" />
-            Acme Inc.
+            Superleap
           </span>
           <ChevronDown className="h-4 w-4 text-gray-400" />
         </button>
-        <div className="mt-2 flex gap-1 px-1">
-          <button type="button" className="rounded p-1.5 text-gray-500 hover:bg-gray-100" aria-label="Notifications">
-            <Bell className="h-4 w-4" />
-          </button>
-        </div>
         <div className="relative mt-2">
           <Search className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
           <input
@@ -44,9 +37,6 @@ export function Sidebar() {
             className="w-full rounded-md border border-gray-200 py-1.5 pl-8 pr-2 text-xs text-gray-700 placeholder:text-gray-400"
             disabled
           />
-          <span className="pointer-events-none absolute right-2 top-1.5 rounded border border-gray-200 bg-gray-50 px-1 text-[10px] text-gray-400">
-            ctrl+k
-          </span>
         </div>
       </div>
 
@@ -54,16 +44,14 @@ export function Sidebar() {
         <NavLink
           to="/leads"
           className={({ isActive }) =>
-            `mb-0.5 flex items-center gap-2 rounded-md px-2 py-1.5 ${isActive ? 'bg-teal-50 text-teal-800' : 'text-gray-600 hover:bg-gray-50'}`
+            `mb-0.5 flex items-center gap-2 rounded-md px-2 py-1.5 ${
+              isActive ? 'bg-teal-50 text-teal-800' : 'text-gray-600 hover:bg-gray-50'
+            }`
           }
         >
           <Home className="h-4 w-4" />
           Home
         </NavLink>
-        <div className="mb-0.5 flex items-center gap-2 rounded-md bg-emerald-50 px-2 py-1.5 text-emerald-800">
-          <Sparkles className="h-4 w-4" />
-          Super
-        </div>
         <button
           type="button"
           className="mb-3 flex w-full items-center justify-between rounded-md px-2 py-1.5 text-gray-600 hover:bg-gray-50"

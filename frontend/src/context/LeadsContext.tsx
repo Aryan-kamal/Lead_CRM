@@ -9,7 +9,11 @@ import {
 } from 'react';
 import * as api from '../api/leads';
 import type { Lead, LeadInput, LeadStatus } from '../types/lead';
+import { KNOWN_SOURCES } from '../constants/sources';
 import { STATUSES } from '../types/lead';
+
+export type SortField = 'updated_at' | 'created_at';
+export type SortDir = 'asc' | 'desc';
 
 type LeadsContextValue = {
   leads: Lead[];
@@ -18,10 +22,20 @@ type LeadsContextValue = {
   error: string | null;
   searchQuery: string;
   statusFilter: LeadStatus[];
+  sourceFilter: string[];
+  sortField: SortField;
+  sortDir: SortDir;
   actionError: string | null;
   setSearchQuery: (q: string) => void;
   toggleStatusFilter: (status: LeadStatus) => void;
   clearStatusFilter: () => void;
+  toggleSourceFilter: (source: string) => void;
+  clearSourceFilter: () => void;
+  setSort: (field: SortField, dir: SortDir) => void;
+  setSortField: (field: SortField) => void;
+  toggleSortDir: () => void;
+  clearAllFilters: () => void;
+  activeFilterCount: number;
   refreshLeads: () => Promise<void>;
   getLeadById: (id: string) => Lead | undefined;
   createLead: (data: LeadInput) => Promise<Lead>;
@@ -33,6 +47,25 @@ type LeadsContextValue = {
 
 const LeadsContext = createContext<LeadsContextValue | null>(null);
 
+function matchesSourceFilter(
+  source: string | null,
+  filter: string[],
+): boolean {
+  const wantsOthers = filter.includes('others');
+  const named = filter.filter((s) => s !== 'others');
+  const isOthers =
+    !source || !(KNOWN_SOURCES as readonly string[]).includes(source);
+
+  if (named.length > 0 && source && named.includes(source)) return true;
+  if (wantsOthers && isOthers) return true;
+  return false;
+}
+
+function compareTime(a: string, b: string, dir: SortDir): number {
+  const diff = new Date(a).getTime() - new Date(b).getTime();
+  return dir === 'asc' ? diff : -diff;
+}
+
 export function LeadsProvider({ children }: { children: ReactNode }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +73,9 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
+  const [sortField, setSortField] = useState<SortField>('updated_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   const refreshLeads = useCallback(async () => {
     setLoading(true);
@@ -60,8 +96,11 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
 
   const filteredLeads = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return leads.filter((lead) => {
+    const filtered = leads.filter((lead) => {
       if (statusFilter.length > 0 && !statusFilter.includes(lead.status)) {
+        return false;
+      }
+      if (sourceFilter.length > 0 && !matchesSourceFilter(lead.source, sourceFilter)) {
         return false;
       }
       if (!q) return true;
@@ -70,7 +109,11 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
         lead.email.toLowerCase().includes(q)
       );
     });
-  }, [leads, searchQuery, statusFilter]);
+
+    return [...filtered].sort((a, b) =>
+      compareTime(a[sortField], b[sortField], sortDir),
+    );
+  }, [leads, searchQuery, statusFilter, sourceFilter, sortField, sortDir]);
 
   const toggleStatusFilter = useCallback((status: LeadStatus) => {
     setStatusFilter((prev) =>
@@ -79,6 +122,36 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearStatusFilter = useCallback(() => setStatusFilter([]), []);
+
+  const toggleSourceFilter = useCallback((source: string) => {
+    setSourceFilter((prev) =>
+      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source],
+    );
+  }, []);
+
+  const clearSourceFilter = useCallback(() => setSourceFilter([]), []);
+
+  const setSort = useCallback((field: SortField, dir: SortDir) => {
+    setSortField(field);
+    setSortDir(dir);
+  }, []);
+
+  const setSortFieldOnly = useCallback((field: SortField) => {
+    setSortField(field);
+  }, []);
+
+  const toggleSortDir = useCallback(() => {
+    setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+  }, []);
+
+  const clearAllFilters = useCallback(() => {
+    setStatusFilter([]);
+    setSourceFilter([]);
+    setSearchQuery('');
+  }, []);
+
+  const activeFilterCount =
+    statusFilter.length + sourceFilter.length + (searchQuery.trim() ? 1 : 0);
 
   const getLeadById = useCallback(
     (id: string) => leads.find((l) => l.id === id),
@@ -133,10 +206,20 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
     error,
     searchQuery,
     statusFilter,
+    sourceFilter,
+    sortField,
+    sortDir,
     actionError,
     setSearchQuery,
     toggleStatusFilter,
     clearStatusFilter,
+    toggleSourceFilter,
+    clearSourceFilter,
+    setSort,
+    setSortField: setSortFieldOnly,
+    toggleSortDir,
+    clearAllFilters,
+    activeFilterCount,
     refreshLeads,
     getLeadById,
     createLead,
@@ -147,9 +230,7 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LeadsContext.Provider value={value}>
-      {children}
-    </LeadsContext.Provider>
+    <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>
   );
 }
 

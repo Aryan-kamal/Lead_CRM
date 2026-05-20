@@ -11,8 +11,10 @@ type Props = {
 
 export function StatusMenu({ lead, onChange, compact }: Props) {
   const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const next = getNextStatuses(lead.status);
 
   useEffect(() => {
@@ -22,6 +24,16 @@ export function StatusMenu({ lead, onChange, compact }: Props) {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  function toggleOpen() {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = next.length * 40 + 16;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUp(spaceBelow < menuHeight);
+    }
+    setOpen((v) => !v);
+  }
 
   if (isTerminal(lead.status)) {
     return (
@@ -44,9 +56,10 @@ export function StatusMenu({ lead, onChange, compact }: Props) {
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={buttonRef}
         type="button"
         disabled={busy || next.length === 0}
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         className={`inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 ${
           compact ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-sm'
         }`}
@@ -59,7 +72,9 @@ export function StatusMenu({ lead, onChange, compact }: Props) {
       {open && (
         <ul
           role="listbox"
-          className="absolute right-0 z-10 mt-1 min-w-[10rem] rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+          className={`absolute right-0 z-50 min-w-[10rem] rounded-md border border-gray-200 bg-white py-1 shadow-lg ${
+            openUp ? 'bottom-full mb-1' : 'top-full mt-1'
+          }`}
         >
           {next.map((status) => (
             <li key={status}>
