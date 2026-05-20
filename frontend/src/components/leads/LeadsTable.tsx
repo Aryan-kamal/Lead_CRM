@@ -95,8 +95,18 @@ export function LeadsTable() {
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Phone</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5" />
+                  Email
+                </span>
+              </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" />
+                  Phone
+                </span>
+              </th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Source</th>
               <th className="px-4 py-3">Updated</th>
@@ -120,21 +130,9 @@ export function LeadsTable() {
                     </Link>
                   </div>
                 </td>
+                <td className="px-4 py-3 text-gray-600">{lead.email}</td>
                 <td className="px-4 py-3 text-gray-600">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                    {lead.email}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {lead.phone ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Phone className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                      {lead.phone}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
+                  {lead.phone ?? <span className="text-gray-400">—</span>}
                 </td>
                 <td className="px-4 py-3">
                   <StatusBadge status={lead.status} />
