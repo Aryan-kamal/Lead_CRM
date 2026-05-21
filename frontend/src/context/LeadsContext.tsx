@@ -19,7 +19,7 @@ import {
   parseListParam,
 } from '../utils/urlFilters';
 
-export type SortField = 'updated_at' | 'created_at';
+export type SortField = 'updated_at' | 'created_at' | 'name';
 export type SortDir = 'asc' | 'desc';
 
 type LeadsContextValue = {
@@ -73,6 +73,14 @@ function matchesSourceFilter(
 function compareTime(a: string, b: string, dir: SortDir): number {
   const diff = new Date(a).getTime() - new Date(b).getTime();
   return dir === 'asc' ? diff : -diff;
+}
+
+function sortLeads(a: Lead, b: Lead, field: SortField, dir: SortDir): number {
+  if (field === 'name') {
+    const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    return dir === 'asc' ? cmp : -cmp;
+  }
+  return compareTime(a[field], b[field], dir);
 }
 
 export function LeadsProvider({ children }: { children: ReactNode }) {
@@ -221,9 +229,7 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
       );
     });
 
-    return [...filtered].sort((a, b) =>
-      compareTime(a[sortField], b[sortField], sortDir),
-    );
+    return [...filtered].sort((a, b) => sortLeads(a, b, sortField, sortDir));
   }, [leads, searchQuery, statusFilter, sourceFilter, sortField, sortDir]);
 
   const getLeadById = useCallback(

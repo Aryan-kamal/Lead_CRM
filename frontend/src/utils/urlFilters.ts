@@ -18,7 +18,9 @@ export function pathWithFilters(path: string, params: URLSearchParams): string {
 }
 
 export function parseSortField(raw: string | null): SortField {
-  return raw === 'created_at' ? 'created_at' : 'updated_at';
+  if (raw === 'created_at') return 'created_at';
+  if (raw === 'name') return 'name';
+  return 'updated_at';
 }
 
 export function parseSortDir(raw: string | null): SortDir {

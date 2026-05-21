@@ -7,6 +7,7 @@ import { STATUS_LABELS } from '../../utils/status';
 const SORT_FIELDS: { field: SortField; label: string }[] = [
   { field: 'updated_at', label: 'Updated' },
   { field: 'created_at', label: 'Created' },
+  { field: 'name', label: 'Name' },
 ];
 
 export function FilterBar() {
