@@ -8,7 +8,7 @@ This is a small lead-management CRM built for the Superleap frontend intern asse
 
 - **Level 1** - Full CRUD, status transitions, validation, loading/empty/error states, deep-linkable routes.
 - **Level 2** - Kanban board with drag-and-drop, invalid-drop handling, optimistic status updates on the board, and filters/search kept in the URL when switching views.
-- **Level 3** - Pagination, URL State; Not fully done (due to time constraint).
+- **Level 3** - Not done (bulk select / bulk delete / bulk status) due to time constraint; pagination and URL filters are implemented for Level 1–2.
 
 **Extra improvements on top of the base spec**
 
@@ -178,4 +178,5 @@ Examples:
 
 ## Screen recording
 https://drive.google.com/file/d/1d-n4ZNNEvC8z5ilKsWH8WzkCDUmOvit2/view?usp=sharing
+
 (quality might be little low, apologies for that)
