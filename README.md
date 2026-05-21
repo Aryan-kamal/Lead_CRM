@@ -1,4 +1,4 @@
-# Mini Lead CRM — Superleap Assessment
+# Mini Lead CRM - Superleap Assessment
 
 ## Introduction
 
